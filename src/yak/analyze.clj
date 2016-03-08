@@ -80,7 +80,9 @@
   (let [largest (filter-largests entries)
         lookup (lookup-by-all-keys largest)]
     (map (fn [entry]
-           (get lookup (entry-key entry) entry))
+           ;; replace the value, possibly (but not the key!)
+           (let [[k v] entry]
+             [k (second (get lookup (entry-key entry) entry))]))
          entries)))
 
 (defn sort-entries
