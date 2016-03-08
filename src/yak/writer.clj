@@ -31,12 +31,12 @@
           s
           entries))
 
-(defn write-back-entries! [entries dir & [encoding]]
+(defn write-back-entries! [entries & [encoding]]
   (let [by-f (group-by #(:filename (first %))
                        entries)]
     (doseq [[f entries] by-f]
       ;;(println "Processing" (.getPath (io/file f)))
-      (let [ff (io/file dir f)
+      (let [ff (io/file f)
             before (slurp ff :encoding encoding)
             after (-> before
                       (replace-entries entries))]
