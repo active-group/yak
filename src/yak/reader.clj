@@ -1,7 +1,8 @@
 (ns yak.reader
   (:require [clojure.tools.reader :as r]
             [clojure.tools.reader.reader-types :as rt]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [yak.analyze :as analyze]))
 
 (defn all-ls [v id]
   (if (coll? v)
@@ -45,18 +46,11 @@
   (map #(add-meta-position % filename)
        coll))
 
-(defn sort-entries
-  [entries]
-  (sort-by (fn [[{:keys [filename line column]} v]]
-             ;; sort by filename, and inverse occurence in file.
-             [filename (- line) (- column)])
-           entries))
-
 (defn process-content [s filename id]
   (-> s
       (read-ls id)
       (add-meta-positions filename)
-      (sort-entries)))
+      (analyze/sort-entries)))
 
 (defn read-file [file id & [encoding]]
   (println "Reading" (.getPath (io/file file)))
@@ -65,7 +59,11 @@
     (println "  found" (count r) "localizables.")
     r))
 
-(defn read-files-in [dir id & [encoding]]
+(defn read-entries-in
+  "Parses all clojure files in dir, returning all forms starting with
+  `id`, returning them as tuples `location` and those forms, in the
+  reverse order they appear."
+  [dir id & [encoding]]
   (mapcat #(read-file % id encoding)
           (filter (fn [^java.io.File f]
                     (and (.isFile f)

@@ -1,28 +1,22 @@
 (ns yak.writer
-  
-  )
+  (:require [clojure.java.io :as io]))
 
-(defn split-string-2' [s line column accu]
-  (if (= line 1)
-    (let [[bef aft] (split-at (dec column) s)]
-      [(apply str (concat accu bef)) (apply str aft)])
-    (let [[p1 r1] (split-with #(not= % \newline) s) ;; consider CRLF?
-          [nl r2] (split-at 1 r1)]
-      (recur r2 (dec line) column (concat accu p1 nl)))))
-
-(defn split-string-2 [s line column]
-  (split-string-2' s line column nil))
+(defn find-char-pos [s line column]
+  (loop [s s
+         line line
+         res 0]
+    (assert (> line 0))
+    (if (= line 1)
+      (+ res (dec column))
+      (let [[l r] (split-with #(not= % \newline) s)]
+        (recur (rest r) ;; also drop the nl
+               (dec line)
+               (+ res 1 (count l)))))))
 
 (defn split-string-3 [s line column end-line end-column]
-  ;; Leaves some room for optimization:
-  (let [[bef r] (split-string-2 s line column)
-        [m aft] (split-string-2 r
-                                (+ 1 (- end-line line))
-                                ;; end-column is inclusive:
-                                (+ 1 (if (= end-line line)
-                                       (- end-column column)
-                                       end-column)))]
-    [bef m aft]))
+  (let [p1 (find-char-pos s line column)
+        p2 (find-char-pos s end-line end-column)]
+    [(subs s 0 p1) (subs s p1 p2) (subs s p2)]))
 
 (defn replace-string [s {:keys [line column end-line end-column]} r]
   (let [[before _ after] (split-string-3 s line column end-line end-column)]
@@ -37,10 +31,15 @@
           s
           entries))
 
-(defn write-back-entries [entries]
+(defn write-back-entries! [entries dir & [encoding]]
   (let [by-f (group-by #(:filename (first %))
                        entries)]
     (doseq [[f entries] by-f]
-      ;; TOOO: encodings
-      (spit f (-> (slurp f)
-                  (replace-entries entries))))))
+      ;;(println "Processing" (.getPath (io/file f)))
+      (let [ff (io/file dir f)
+            before (slurp ff :encoding encoding)
+            after (-> before
+                      (replace-entries entries))]
+        (when (not= before after)
+          (println "Writing" (.getPath ff))
+          (spit ff after))))))
