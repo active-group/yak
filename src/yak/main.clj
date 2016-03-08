@@ -10,7 +10,8 @@
   entries that are still missing the given locale."
   [dir id locale & [encoding]]
   (-> (reader/read-entries-in dir id encoding)
-      (analyze/filter-largests)))
+      (analyze/filter-largests)
+      (analyze/filter-missing locale)))
 
 (defn write-back!
   "Write back the given entries to the files relative to the current dir."

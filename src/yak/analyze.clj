@@ -89,3 +89,9 @@
              ;; sort by filename, and inverse occurence in file.
              [filename (- line) (- column)])
            entries))
+
+(defn filter-missing
+  "Return only those entries, that do not have a translation for the given locale yet."
+  [entries locale]
+  (remove #(contains? (set (keys (entry-key %))) locale)
+          entries))
