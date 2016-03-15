@@ -1,6 +1,7 @@
 (ns yak.core-test
   (:require [clojure.test :refer :all]
-            [yak.core :refer :all]))
+            [yak.core :refer :all]
+            [yak.locale :as loc]))
 
 (deftest L-test
   (is (= (L "abc")

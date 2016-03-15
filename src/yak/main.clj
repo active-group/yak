@@ -5,14 +5,6 @@
             [yak.writer :as writer]
             [yak.edn :as edn]))
 
-(defn largests-missing
-  "Search for all localizables in dir, returning the most complete
-  entries that are still missing the given locale."
-  [dir id locale & [encoding]]
-  (-> (reader/read-entries-in dir id encoding)
-      (analyze/filter-largests)
-      (analyze/filter-missing locale)))
-
 (defn write-back!
   "Write back the given entries to the files relative to the current dir."
   [entries & [encoding]]
@@ -31,7 +23,9 @@
   "Write to `out-file` in edn format, the largest localizable entries
   from `dir` that still miss a translation for `locale`"
   [out-file dir id locale & [encoding]]
-  (-> (largests-missing dir id locale encoding)
+  (-> (reader/read-entries-in dir id encoding)
+      (analyze/filter-largests)
+      (analyze/filter-missing locale)
       (edn/write-entries! out-file encoding)))
 
 (defn write-back-edn!

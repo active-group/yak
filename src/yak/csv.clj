@@ -15,7 +15,7 @@
     (core/-to-string l)))
 
 (defn pos-repr [{:keys [filename line column end-line end-column]}]
-  (str fname " " line " " column " " end-line " " end-column))
+  (str filename " " line " " column " " end-line " " end-column))
 
 (defn csv [entries]
   (let [locales' (mapcat (comp locales-in-L second) entries)
